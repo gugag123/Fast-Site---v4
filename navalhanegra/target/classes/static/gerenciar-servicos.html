@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<!-- ADMIN: gerenciar o catálogo de serviços (CRUD). O cliente escolhe o serviço em /servicos.html -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Navalha Negra | Gerenciar serviços</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;700&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="oculto">
+<div class="painel-admin">
+    <aside class="lateral">
+        <div class="dentro">
+            <a class="marca" href="/home.html">
+                <div class="emblema">NN</div>
+                <div class="marca-nome">NAVALHA <span>NEGRA</span></div>
+            </a>
+            <nav>
+                <a href="/home.html">Início</a>
+                <a href="/cadastros.html">Cadastros salvos</a>
+                <a href="/gerenciar-servicos.html" class="ativo">Gerenciar serviços</a>
+                <a href="/agendamentos.html">Agendamentos</a>
+                <a href="/cadastro.html">Novo cadastro</a>
+            </nav>
+            <div class="rodape">
+                <div class="aluno">Aluno: <strong>Gustavo D. e Arthur M.</strong></div>
+                <div class="aluno">Admin: <span data-email-logado></span></div>
+                <button id="btnSair" class="btn btn-contorno btn-pequeno">Sair</button>
+            </div>
+        </div>
+        <div class="poste-vertical"></div>
+    </aside>
+
+    <main class="area">
+        <div class="cabecalho-area">
+            <div>
+                <h1>Catálogo <span>de serviços</span></h1>
+                <div class="contador" id="contador"></div>
+            </div>
+        </div>
+
+        <div id="msgTela" class="alerta" role="alert"></div>
+
+        <div class="crud">
+            <!-- CREATE / UPDATE -->
+            <section class="form-crud" id="caixaForm">
+                <div class="faixa"></div>
+                <form id="form" novalidate>
+                    <h2 id="tituloForm">Novo <span>serviço</span></h2>
+                    <input type="hidden" id="id">
+                    <div class="campo">
+                        <label for="nome">Nome *</label>
+                        <input id="nome" maxlength="100" placeholder="Ex.: Corte degradê">
+                    </div>
+                    <div class="campo">
+                        <label for="descricao">Descrição</label>
+                        <input id="descricao" maxlength="255" placeholder="Opcional">
+                    </div>
+                    <div class="duas">
+                        <div class="campo">
+                            <label for="preco">Preço (R$) *</label>
+                            <input id="preco" type="number" step="0.01" min="0.01" placeholder="40.00">
+                        </div>
+                        <div class="campo">
+                            <label for="duracao">Duração (min) *</label>
+                            <input id="duracao" type="number" min="5" max="480" step="5" placeholder="30">
+                        </div>
+                    </div>
+                    <div class="botoes">
+                        <button class="btn" type="submit" id="btnSalvar">Cadastrar</button>
+                        <button class="btn btn-claro" type="button" id="btnCancelar" hidden>Cancelar</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- READ -->
+            <section>
+                <div class="barra-lista">
+                    <div class="campo">
+                        <label for="busca">Buscar</label>
+                        <input id="busca" type="search" placeholder="Nome ou descrição">
+                    </div>
+                    <button class="btn btn-claro btn-pequeno" type="button" id="btnExportar">Exportar Excel (CSV)</button>
+                </div>
+                <div class="tabela-caixa">
+                    <table class="tabela">
+                        <thead><tr>
+                            <th>#</th><th>Nome</th><th>Descrição</th><th class="num">Preço</th><th class="num">Duração</th><th></th>
+                        </tr></thead>
+                        <tbody id="corpo"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<dialog class="modal" id="modalConfirmar">
+    <div class="faixa"></div>
+    <form method="dialog" class="corpo">
+        <h2>Excluir registro?</h2>
+        <p id="modalTexto"></p>
+        <div class="botoes">
+            <button class="btn btn-claro" value="nao">Cancelar</button>
+            <button class="btn" value="sim" autofocus>Excluir</button>
+        </div>
+    </form>
+</dialog>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/js/sessao.js"></script>
+<script src="/js/crud.js"></script>
+<script>
+    let lista = [];
+
+    // ---------- READ: GET /api/servicos ----------
+    async function carregar() {
+        try {
+            lista = await api("/api/servicos");
+            desenhar();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    function filtrada() {
+        const termo = $("busca").value.trim().toLowerCase();
+        return lista.filter(s => (s.nome + " " + (s.descricao || "")).toLowerCase().includes(termo));
+    }
+
+    function desenhar() {
+        const itens = filtrada();
+        $("contador").textContent = lista.length + (lista.length === 1 ? " serviço" : " serviços");
+        const corpo = $("corpo");
+        corpo.innerHTML = "";
+        if (itens.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="6" class="tabela-vazia">Nenhum serviço encontrado.</td></tr>';
+            return;
+        }
+        for (const s of itens) {
+            const tr = document.createElement("tr");
+            tr.append(celula(s.id), celula(s.nome), celula(s.descricao || "—"),
+                      celula(moeda(s.preco), "num"), celula(s.duracaoMin + " min", "num"),
+                      celulaAcoes(() => editar(s.id), () => excluir(s)));
+            corpo.appendChild(tr);
+        }
+    }
+    $("busca").addEventListener("input", desenhar);
+
+    // ---------- CREATE / UPDATE ----------
+    function limparForm() {
+        $("form").reset();
+        $("id").value = "";
+        $("tituloForm").innerHTML = "Novo <span>serviço</span>";
+        $("btnSalvar").textContent = "Cadastrar";
+        $("btnCancelar").hidden = true;
+        $("caixaForm").classList.remove("editando");
+        document.querySelectorAll("#form input").forEach(i => i.classList.remove("invalido"));
+    }
+    $("btnCancelar").onclick = () => { limparForm(); alerta(""); };
+
+    // UPDATE (passo 1): carrega o registro no formulário (GET /api/servicos/{id})
+    async function editar(id) {
+        try {
+            const s = await api("/api/servicos/" + id);
+            $("id").value = s.id;
+            $("nome").value = s.nome;
+            $("descricao").value = s.descricao || "";
+            $("preco").value = s.preco;
+            $("duracao").value = s.duracaoMin;
+            $("tituloForm").innerHTML = "Editar <span>serviço #" + s.id + "</span>";
+            $("btnSalvar").textContent = "Salvar alterações";
+            $("btnCancelar").hidden = false;
+            $("caixaForm").classList.add("editando");
+            alerta("");
+            $("nome").focus();
+            $("caixaForm").scrollIntoView({ behavior: "smooth", block: "nearest" });
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    // Validação dos campos obrigatórios no navegador (o Java valida de novo)
+    function validar() {
+        const obrig = ["nome", "preco", "duracao"];
+        let ok = true;
+        for (const campo of obrig) {
+            const vazio = !$(campo).value.trim();
+            $(campo).classList.toggle("invalido", vazio);
+            if (vazio) ok = false;
+        }
+        if (!ok) alerta("Preencha os campos obrigatórios (*)", "erro");
+        return ok;
+    }
+
+    $("form").addEventListener("submit", async e => {
+        e.preventDefault();
+        if (!validar()) return;
+        const id = $("id").value;
+        const corpo = {
+            nome: $("nome").value.trim(),
+            descricao: $("descricao").value.trim(),
+            preco: Number($("preco").value),
+            duracaoMin: Number($("duracao").value)
+        };
+        try {
+            if (id) {   // UPDATE: PUT /api/servicos/{id}
+                await api("/api/servicos/" + id, jsonOpcoes("PUT", corpo));
+                toast("Registro atualizado");
+            } else {    // CREATE: POST /api/servicos
+                await api("/api/servicos", jsonOpcoes("POST", corpo));
+                toast("Registro criado com sucesso");
+            }
+            alerta("");
+            limparForm();
+            await carregar();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    });
+
+    // ---------- DELETE: DELETE /api/servicos/{id} (com modal) ----------
+    async function excluir(s) {
+        if (!await confirmar(`Excluir o serviço "${s.nome}"? Essa ação não pode ser desfeita.`)) return;
+        try {
+            await api("/api/servicos/" + s.id, { method: "DELETE" });
+            toast("Registro excluído");
+            if ($("id").value === String(s.id)) limparForm();
+            alerta("");
+            await carregar();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    // ---------- Desafio 2: exportar ----------
+    $("btnExportar").onclick = () => exportarCSV("servicos.csv",
+        ["ID", "Nome", "Descrição", "Preço", "Duração (min)"],
+        filtrada().map(s => [s.id, s.nome, s.descricao, String(s.preco).replace(".", ","), s.duracaoMin]));
+
+    ligarBotaoSair();
+    exigirAdmin().then(u => { if (u) carregar(); });
+</script>
+</body>
+</html>

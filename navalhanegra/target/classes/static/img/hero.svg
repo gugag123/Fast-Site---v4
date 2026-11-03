@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <!-- listras do poste de barbeiro -->
+    <pattern id="poste" width="120" height="120" patternUnits="userSpaceOnUse" patternTransform="rotate(-35)">
+      <rect width="120" height="120" fill="#ffffff"/>
+      <rect width="30" height="120" fill="#d10f1a"/>
+      <rect x="60" width="30" height="120" fill="#0b0b0b"/>
+    </pattern>
+    <!-- piso xadrez -->
+    <pattern id="piso" width="120" height="120" patternUnits="userSpaceOnUse">
+      <rect width="120" height="120" fill="#f2f2f2"/>
+      <rect width="60" height="60" fill="#0b0b0b"/>
+      <rect x="60" y="60" width="60" height="60" fill="#0b0b0b"/>
+    </pattern>
+  </defs>
+
+  <!-- Parede -->
+  <rect width="1920" height="1080" fill="#0b0b0b"/>
+  <rect x="0" y="0" width="1920" height="40" fill="#d10f1a"/>
+
+  <!-- Faixa com o nome -->
+  <rect x="760" y="90" width="1060" height="70" fill="#d10f1a"/>
+  <text x="1290" y="140" font-family="Arial Black, Arial, sans-serif" font-size="38" fill="#ffffff" text-anchor="middle" letter-spacing="12">NAVALHA NEGRA • BARBEARIA</text>
+
+  <!-- Espelho -->
+  <rect x="980" y="210" width="620" height="420" fill="#ffffff"/>
+  <rect x="1000" y="230" width="580" height="380" fill="#1d1d1d"/>
+  <polygon points="1040,600 1180,240 1240,240 1100,600" fill="#2a2a2a"/>
+  <polygon points="1130,600 1270,240 1300,240 1160,600" fill="#2a2a2a"/>
+
+  <!-- Piso -->
+  <rect x="0" y="830" width="1920" height="250" fill="url(#piso)"/>
+  <rect x="0" y="820" width="1920" height="14" fill="#d10f1a"/>
+
+  <!-- Cadeira de barbeiro -->
+  <g fill="#ffffff">
+    <rect x="1140" y="330" width="300" height="70" rx="10"/>        <!-- encosto de cabeça -->
+    <rect x="1160" y="410" width="260" height="240" rx="18"/>       <!-- encosto -->
+    <rect x="1110" y="630" width="360" height="70" rx="14"/>        <!-- assento -->
+    <rect x="1080" y="600" width="60" height="30" rx="8"/>          <!-- braço -->
+    <rect x="1440" y="600" width="60" height="30" rx="8"/>
+  </g>
+  <rect x="1180" y="430" width="220" height="200" rx="12" fill="#d10f1a"/>
+  <rect x="1260" y="700" width="60" height="100" fill="#d10f1a"/>
+  <rect x="1180" y="790" width="220" height="30" fill="#ffffff"/>
+  <rect x="1120" y="700" width="60" height="18" fill="#ffffff"/>    <!-- apoio de pé -->
+
+  <!-- Poste de barbeiro -->
+  <g transform="translate(1680 200)">
+    <rect x="-10" y="0" width="140" height="40" rx="20" fill="#ffffff"/>
+    <rect x="15" y="40" width="90" height="480" fill="url(#poste)"/>
+    <rect x="15" y="40" width="20" height="480" fill="#ffffff" opacity="0.35"/>
+    <rect x="-10" y="520" width="140" height="40" rx="20" fill="#ffffff"/>
+    <rect x="45" y="560" width="30" height="260" fill="#ffffff"/>
+  </g>
+
+  <!-- Tesoura gigante -->
+  <g transform="translate(740 560) rotate(-20)" fill="#ffffff">
+    <polygon points="0,-14 300,-4 300,4 0,14"/>
+    <polygon points="0,-14 290,40 284,50 -6,6"/>
+    <circle cx="-60" cy="-30" r="46" fill="none" stroke="#ffffff" stroke-width="22"/>
+    <circle cx="-50" cy="60" r="46" fill="none" stroke="#ffffff" stroke-width="22"/>
+    <circle cx="0" cy="0" r="12" fill="#d10f1a"/>
+  </g>
+
+  <!-- Navalha -->
+  <g transform="translate(130 210) rotate(18)">
+    <rect x="0" y="0" width="360" height="60" fill="#ffffff"/>
+    <rect x="0" y="48" width="360" height="12" fill="#bfbfbf"/>
+    <rect x="-200" y="18" width="210" height="34" rx="16" fill="#d10f1a"/>
+    <circle cx="5" cy="35" r="10" fill="#0b0b0b"/>
+  </g>
+
+  <!-- Bigode (assinatura da marca) -->
+  <path d="M140 520 Q220 470 300 520 Q380 470 460 520 Q420 600 340 560 Q300 545 300 545 Q300 545 260 560 Q180 600 140 520 Z" fill="#d10f1a"/>
+</svg>

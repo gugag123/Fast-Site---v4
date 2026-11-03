@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!-- ADMIN: pedidos de agendamento. O cliente escolhe serviço/data/horário em /servicos.html;
+     aqui o administrador só ACEITA ou RECUSA. -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Navalha Negra | Agendamentos</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;700&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="oculto">
+<div class="painel-admin">
+    <aside class="lateral">
+        <div class="dentro">
+            <a class="marca" href="/home.html">
+                <div class="emblema">NN</div>
+                <div class="marca-nome">NAVALHA <span>NEGRA</span></div>
+            </a>
+            <nav>
+                <a href="/home.html">Início</a>
+                <a href="/cadastros.html">Cadastros salvos</a>
+                <a href="/agendamentos.html" class="ativo">Agendamentos</a>
+                <a href="/gerenciar-servicos.html">Gerenciar serviços</a>
+                <a href="/cadastro.html">Novo cadastro</a>
+            </nav>
+            <div class="rodape">
+                <div class="aluno">Aluno: <strong>Gustavo D. e Arthur M.</strong></div>
+                <div class="aluno">Admin: <span data-email-logado></span></div>
+                <button id="btnSair" class="btn btn-contorno btn-pequeno">Sair</button>
+            </div>
+        </div>
+        <div class="poste-vertical"></div>
+    </aside>
+
+    <main class="area">
+        <div class="cabecalho-area">
+            <div>
+                <h1>Pedidos <span>de horário</span></h1>
+                <div class="contador" id="contador"></div>
+            </div>
+        </div>
+
+        <div id="msgTela" class="alerta" role="alert"></div>
+
+        <section>
+            <div class="barra-lista">
+                <div class="campo">
+                    <label for="busca">Buscar</label>
+                    <input id="busca" type="search" placeholder="Cliente, serviço ou status">
+                </div>
+                <button class="btn btn-claro btn-pequeno" type="button" id="btnExportar">Exportar Excel (CSV)</button>
+            </div>
+            <div class="tabela-caixa">
+                <table class="tabela">
+                    <thead><tr>
+                        <th>#</th><th>Data</th><th>Hora</th><th>Cliente</th><th>Serviço</th><th class="num">Valor</th><th>Status</th><th></th>
+                    </tr></thead>
+                    <tbody id="corpo"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/js/sessao.js"></script>
+<script src="/js/crud.js"></script>
+<script>
+    let lista = [];
+    const NOMES_STATUS = { PENDENTE: "Pendente", ACEITO: "Aceito", RECUSADO: "Recusado" };
+
+    // ---------- READ: GET /api/agendamentos ----------
+    async function carregar() {
+        try {
+            lista = await api("/api/agendamentos");
+            desenhar();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    function filtrada() {
+        const termo = $("busca").value.trim().toLowerCase();
+        return lista.filter(a =>
+            (a.clienteNome + " " + a.servicoNome + " " + NOMES_STATUS[a.status] + " " + dataBR(a.data))
+                .toLowerCase().includes(termo));
+    }
+
+    // Pendentes primeiro (são os que precisam de resposta)
+    function ordenar(itens) {
+        return [...itens].sort((x, y) => (y.status === "PENDENTE") - (x.status === "PENDENTE"));
+    }
+
+    function botao(texto, perigo, aoClicar) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = texto;
+        b.className = "btn-tabela" + (perigo ? " perigo" : "");
+        b.onclick = aoClicar;
+        return b;
+    }
+
+    function desenhar() {
+        const itens = ordenar(filtrada());
+        const pendentes = lista.filter(a => a.status === "PENDENTE").length;
+        $("contador").textContent = lista.length + (lista.length === 1 ? " pedido" : " pedidos")
+            + " · " + pendentes + (pendentes === 1 ? " pendente" : " pendentes");
+        const corpo = $("corpo");
+        corpo.innerHTML = "";
+        if (itens.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="8" class="tabela-vazia">Nenhum pedido encontrado.</td></tr>';
+            return;
+        }
+        for (const a of itens) {
+            const tr = document.createElement("tr");
+            const tdStatus = document.createElement("td");
+            const selo = document.createElement("span");
+            selo.className = "selo-status " + a.status;
+            selo.textContent = NOMES_STATUS[a.status] || a.status;
+            tdStatus.appendChild(selo);
+
+            const tdAcoes = document.createElement("td");
+            tdAcoes.className = "col-acoes";
+            if (a.status === "PENDENTE") {
+                tdAcoes.append(botao("Aceitar", false, () => decidir(a, "ACEITO")),
+                               botao("Recusar", true, () => decidir(a, "RECUSADO")));
+            }
+            tr.append(celula(a.id), celula(dataBR(a.data)), celula(a.horario),
+                      celula(a.clienteNome), celula(a.servicoNome), celula(moeda(a.valor), "num"),
+                      tdStatus, tdAcoes);
+            corpo.appendChild(tr);
+        }
+    }
+    $("busca").addEventListener("input", desenhar);
+
+    // ---------- PATCH /api/agendamentos/{id}/status ----------
+    async function decidir(a, status) {
+        try {
+            await api("/api/agendamentos/" + a.id + "/status", jsonOpcoes("PATCH", { status }));
+            toast(status === "ACEITO" ? "Agendamento aceito" : "Agendamento recusado");
+            alerta("");
+            await carregar();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    $("btnExportar").onclick = () => exportarCSV("agendamentos.csv",
+        ["ID", "Data", "Horário", "Cliente", "Serviço", "Valor", "Status"],
+        filtrada().map(a => [a.id, dataBR(a.data), a.horario, a.clienteNome, a.servicoNome,
+                             String(a.valor).replace(".", ","), NOMES_STATUS[a.status]]));
+
+    ligarBotaoSair();
+    exigirAdmin().then(u => { if (u) carregar(); });
+</script>
+</body>
+</html>

@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<!-- TELA 3: CADASTROS SALVOS (consulta) - SÓ O ADMINISTRADOR ACESSA -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Navalha Negra | Cadastros salvos</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;700&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="oculto">
+<div class="painel-admin">
+    <!-- Menu lateral -->
+    <aside class="lateral">
+        <div class="dentro">
+            <a class="marca" href="/home.html">
+                <div class="emblema">NN</div>
+                <div class="marca-nome">NAVALHA <span>NEGRA</span></div>
+            </a>
+            <nav>
+                <a href="/home.html">Início</a>
+                <a href="/cadastros.html" class="ativo">Cadastros salvos</a>
+                <a href="/gerenciar-servicos.html">Gerenciar serviços</a>
+                <a href="/agendamentos.html">Agendamentos</a>
+                <a href="/cadastro.html">Novo cadastro</a>
+            </nav>
+            <div class="rodape">
+                <div class="aluno">Aluno: <strong>Gustavo D. e Arthur M.</strong></div>
+                <div class="aluno">Admin: <span data-email-logado></span></div>
+                <button id="btnSair" class="btn btn-contorno btn-pequeno">Sair</button>
+            </div>
+        </div>
+        <div class="poste-vertical"></div>
+    </aside>
+
+    <!-- Conteúdo -->
+    <main class="area">
+        <div class="cabecalho-area">
+            <div>
+                <h1>Cadastros <span>salvos</span></h1>
+                <div class="contador" id="contador"></div>
+            </div>
+            <form class="busca" id="formBusca">
+                <div class="campo">
+                    <label for="buscaId">Buscar por ID</label>
+                    <input id="buscaId" type="number" min="1" placeholder="Ex.: 3">
+                </div>
+                <button class="btn btn-pequeno" type="submit">Buscar</button>
+            </form>
+        </div>
+
+        <div id="msgLista" class="alerta" role="alert"></div>
+
+        <div class="duas-colunas">
+            <!-- Cartões dos clientes (GET /api/cadastros) -->
+            <section class="cartoes" id="lista" aria-label="Clientes"></section>
+
+            <!-- Ficha (GET /api/cadastros/{id}) -->
+            <section class="ficha">
+                <div class="topo-ficha"><h2 id="detalheTitulo">Ficha do cliente</h2></div>
+                <p class="vazio" id="detalheVazio">Clique em "Ver ficha" em um cliente.</p>
+                <div class="detalhe" id="detalhe">
+                    <dl id="detalheDados"></dl>
+                </div>
+            </section>
+        </div>
+    </main>
+</div>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/js/sessao.js"></script>
+<script>
+    const $ = id => document.getElementById(id);
+    let selecionado = null;
+
+    function alerta(texto, tipo) {
+        const el = $("msgLista");
+        el.textContent = texto;
+        el.className = "alerta " + (tipo || "");
+    }
+    function toast(texto) {
+        const t = $("toast");
+        t.textContent = texto;
+        t.classList.add("mostrar");
+        clearTimeout(t._timer);
+        t._timer = setTimeout(() => t.classList.remove("mostrar"), 3500);
+    }
+
+    // 401 = sessão expirou -> login; 403 = não é admin -> início
+    async function api(url, opcoes) {
+        const r = await fetch(url, opcoes);
+        if (r.status === 401) { window.location.href = "/index.html"; throw new Error("redirecionado"); }
+        if (r.status === 403) { window.location.href = "/home.html"; throw new Error("redirecionado"); }
+        const dados = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(dados.mensagem || "Erro " + r.status);
+        return dados;
+    }
+
+    // ---------- GET /api/cadastros ----------
+    async function carregarLista() {
+        try {
+            const lista = await api("/api/cadastros");
+            const area = $("lista");
+            area.innerHTML = "";
+            $("contador").textContent = lista.length + (lista.length === 1 ? " cliente" : " clientes");
+            if (lista.length === 0) {
+                area.innerHTML = '<p class="vazio">Nenhum cadastro ainda.</p>';
+                return;
+            }
+            for (const c of lista) {
+                const card = document.createElement("article");
+                card.className = "cartao-cliente" + (c.id === selecionado ? " selecionado" : "");
+                card.dataset.id = c.id;
+                card.innerHTML = `
+                    <div class="faixa"></div>
+                    <div class="corpo">
+                        <div class="numero"></div>
+                        <div class="nome"></div>
+                        <div class="info" data-telefone></div>
+                        <div class="info" data-data></div>
+                    </div>
+                    <div class="acoes">
+                        <button data-ver>Ver ficha</button>
+                        <button data-excluir>Excluir</button>
+                    </div>`;
+                // textContent evita injeção de HTML
+                card.querySelector(".numero").textContent = "Cliente #" + c.id;
+                card.querySelector(".nome").textContent = c.nome;
+                card.querySelector("[data-telefone]").textContent = "☎ " + c.telefone;
+                card.querySelector("[data-data]").textContent = "Desde " + (c.dataCriacao || "").slice(0, 10);
+                card.querySelector("[data-ver]").onclick = () => mostrarDetalhe(c.id);
+                card.querySelector("[data-excluir]").onclick = e => pedirConfirmacao(e.target, c);
+                area.appendChild(card);
+            }
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    // ---------- GET /api/cadastros/{id} ----------
+    async function mostrarDetalhe(id) {
+        try {
+            const c = await api("/api/cadastros/" + id);
+            selecionado = c.id;
+            alerta("");
+            $("detalheTitulo").textContent = "Ficha #" + c.id;
+            const linhas = [
+                ["Nome", c.nome], ["Email", c.email], ["Telefone", c.telefone],
+                ["Endereço", c.endereco + ", " + c.numero], ["CEP", c.cep],
+                ["Observação", c.observacao], ["Cadastrado em", c.dataCriacao]
+            ];
+            const dl = $("detalheDados");
+            dl.innerHTML = "";
+            for (const [rotulo, valor] of linhas) {
+                const dt = document.createElement("dt"); dt.textContent = rotulo;
+                const dd = document.createElement("dd"); dd.textContent = valor || "—";
+                dl.append(dt, dd);
+            }
+            $("detalhe").classList.add("visivel");
+            $("detalheVazio").hidden = true;
+            document.querySelectorAll(".cartao-cliente").forEach(card =>
+                card.classList.toggle("selecionado", card.dataset.id === String(c.id)));
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    $("formBusca").addEventListener("submit", e => {
+        e.preventDefault();
+        const id = $("buscaId").value;
+        if (id) mostrarDetalhe(id);
+    });
+
+    // ---------- DELETE /api/cadastros/{id} (desafio 3) ----------
+    // 1º clique pede confirmação, 2º clique exclui
+    function pedirConfirmacao(botao, c) {
+        if (botao.dataset.confirmar) { excluir(c); return; }
+        botao.dataset.confirmar = "1";
+        botao.textContent = "Confirmar?";
+        setTimeout(() => { delete botao.dataset.confirmar; botao.textContent = "Excluir"; }, 3000);
+    }
+    async function excluir(c) {
+        try {
+            await api("/api/cadastros/" + c.id, { method: "DELETE" });
+            toast(`Cadastro #${c.id} (${c.nome}) excluído`);
+            if (selecionado === c.id) {
+                $("detalhe").classList.remove("visivel");
+                $("detalheVazio").hidden = false;
+                $("detalheTitulo").textContent = "Ficha do cliente";
+                selecionado = null;
+            }
+            await carregarLista();
+        } catch (err) {
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    }
+
+    ligarBotaoSair();
+    exigirAdmin().then(u => { if (u) carregarLista(); });
+</script>
+</body>
+</html>

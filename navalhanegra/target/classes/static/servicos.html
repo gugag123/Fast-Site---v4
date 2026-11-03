@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<!-- SERVIÇOS (CLIENTE): o cliente escolhe o que quer fazer na barbearia e solicita data e horário.
+     O administrador só aceita ou recusa na tela de Agendamentos. -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Navalha Negra | Serviços</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;700&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="oculto">
+<div class="painel-admin">
+    <aside class="lateral">
+        <div class="dentro">
+            <a class="marca" href="/home.html">
+                <div class="emblema">NN</div>
+                <div class="marca-nome">NAVALHA <span>NEGRA</span></div>
+            </a>
+            <nav>
+                <a href="/home.html">Início</a>
+                <a href="/servicos.html" class="ativo">Serviços</a>
+            </nav>
+            <div class="rodape">
+                <div class="aluno">Aluno: <strong>Gustavo D. e Arthur M.</strong></div>
+                <div class="aluno">Cliente: <span data-email-logado></span></div>
+                <button id="btnSair" class="btn btn-contorno btn-pequeno">Sair</button>
+            </div>
+        </div>
+        <div class="poste-vertical"></div>
+    </aside>
+
+    <main class="area">
+        <div class="cabecalho-area">
+            <div>
+                <h1>O que você quer <span>fazer hoje?</span></h1>
+                <div class="contador">Escolha um serviço, depois a data e o horário</div>
+            </div>
+        </div>
+
+        <div id="msgTela" class="alerta" role="alert"></div>
+
+        <!-- 1) ESCOLHER O SERVIÇO -->
+        <div class="cartoes-servico" id="cartoes"></div>
+
+        <!-- 2) PEDIR O HORÁRIO -->
+        <section class="pedido" id="caixaPedido" hidden>
+            <div class="faixa"></div>
+            <form id="form" novalidate>
+                <h2>Seu <span>pedido</span></h2>
+                <div class="resumo" id="resumo"></div>
+                <div class="duas">
+                    <div class="campo">
+                        <label for="data">Data *</label>
+                        <input id="data" type="date">
+                    </div>
+                    <div class="campo">
+                        <label for="horario">Horário *</label>
+                        <input id="horario" type="time" step="900">
+                    </div>
+                </div>
+                <div class="dica">O pedido fica pendente até a barbearia aceitar ou recusar.</div>
+                <div class="botoes">
+                    <button class="btn" type="submit">Solicitar horário</button>
+                </div>
+            </form>
+        </section>
+
+        <!-- 3) ACOMPANHAR -->
+        <h2 class="titulo-secao">Meus <span>agendamentos</span></h2>
+        <div class="tabela-caixa">
+            <table class="tabela">
+                <thead><tr>
+                    <th>Data</th><th>Hora</th><th>Serviço</th><th class="num">Valor</th><th>Status</th>
+                </tr></thead>
+                <tbody id="corpo"></tbody>
+            </table>
+        </div>
+    </main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="/js/sessao.js"></script>
+<script src="/js/crud.js"></script>
+<script>
+    const NOMES_STATUS = { PENDENTE: "Aguardando", ACEITO: "Aceito", RECUSADO: "Recusado" };
+    let servicos = [], escolhido = null;
+
+    // GET /api/servicos -> cartões
+    async function carregarServicos() {
+        servicos = await api("/api/servicos");
+        const caixa = $("cartoes");
+        caixa.innerHTML = "";
+        if (servicos.length === 0) {
+            caixa.innerHTML = '<div class="tabela-vazia">Nenhum serviço disponível no momento.</div>';
+            return;
+        }
+        for (const s of servicos) {
+            const b = document.createElement("button");
+            b.type = "button";
+            b.className = "cartao-servico";
+            b.dataset.id = s.id;
+            b.innerHTML = '<div class="faixa"></div><div class="miolo"><h3></h3><p></p>' +
+                          '<div class="linha-info"><span class="preco"></span><span class="tempo"></span></div></div>';
+            b.querySelector("h3").textContent = s.nome;
+            b.querySelector("p").textContent = s.descricao || "";
+            b.querySelector(".preco").textContent = moeda(s.preco);
+            b.querySelector(".tempo").textContent = s.duracaoMin + " min";
+            b.onclick = () => escolher(s);
+            caixa.appendChild(b);
+        }
+    }
+
+    function escolher(s) {
+        escolhido = s;
+        document.querySelectorAll(".cartao-servico").forEach(c =>
+            c.classList.toggle("escolhido", c.dataset.id === String(s.id)));
+        $("resumo").textContent = s.nome + " — " + moeda(s.preco) + " (" + s.duracaoMin + " min)";
+        $("caixaPedido").hidden = false;
+        // não deixa escolher dia que já passou
+        const hoje = new Date();
+        $("data").min = hoje.getFullYear() + "-" + String(hoje.getMonth() + 1).padStart(2, "0") + "-" + String(hoje.getDate()).padStart(2, "0");
+        alerta("");
+        $("caixaPedido").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    // GET /api/agendamentos/meus
+    async function carregarMeus() {
+        const lista = await api("/api/agendamentos/meus");
+        const corpo = $("corpo");
+        corpo.innerHTML = "";
+        if (lista.length === 0) {
+            corpo.innerHTML = '<tr><td colspan="5" class="tabela-vazia">Você ainda não pediu nenhum horário.</td></tr>';
+            return;
+        }
+        for (const a of lista) {
+            const tr = document.createElement("tr");
+            const tdStatus = document.createElement("td");
+            const selo = document.createElement("span");
+            selo.className = "selo-status " + a.status;
+            selo.textContent = NOMES_STATUS[a.status] || a.status;
+            tdStatus.appendChild(selo);
+            tr.append(celula(dataBR(a.data)), celula(a.horario), celula(a.servicoNome),
+                      celula(moeda(a.valor), "num"), tdStatus);
+            corpo.appendChild(tr);
+        }
+    }
+
+    // POST /api/agendamentos
+    $("form").addEventListener("submit", async e => {
+        e.preventDefault();
+        if (!escolhido) { alerta("Escolha um serviço primeiro", "erro"); return; }
+        let ok = true;
+        for (const c of ["data", "horario"]) {
+            const vazio = !$(c).value;
+            $(c).classList.toggle("invalido", vazio);
+            if (vazio) ok = false;
+        }
+        if (!ok) { alerta("Preencha a data e o horário (*)", "erro"); return; }
+        try {
+            await api("/api/agendamentos", jsonOpcoes("POST", {
+                servicoId: escolhido.id, data: $("data").value, horario: $("horario").value
+            }));
+            toast("Pedido enviado! Aguarde a resposta da barbearia");
+            alerta("");
+            $("form").reset();
+            $("caixaPedido").hidden = true;
+            escolhido = null;
+            document.querySelectorAll(".cartao-servico").forEach(c => c.classList.remove("escolhido"));
+            await carregarMeus();
+        } catch (err) {
+            // api() manda o admin (403) para o início; aqui só mostramos o erro
+            if (err.message !== "redirecionado") alerta(err.message, "erro");
+        }
+    });
+
+    ligarBotaoSair();
+    exigirLogin().then(async u => {
+        if (!u) return;
+        if (u.admin) { window.location.href = "/agendamentos.html"; return; }  // admin só decide pedidos
+        try { await carregarServicos(); await carregarMeus(); }
+        catch (err) { if (err.message !== "redirecionado") alerta(err.message, "erro"); }
+    });
+</script>
+</body>
+</html>

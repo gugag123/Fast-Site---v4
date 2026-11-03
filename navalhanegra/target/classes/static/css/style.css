@@ -1,0 +1,324 @@
+/* =========================================================
+   NAVALHA NEGRA - identidade visual
+   Estilo: barbearia clássica em flat design.
+   Cores duras / alto contraste: preto, branco e vermelho
+   (as cores do poste de barbeiro). Sem degradês, sem sombras.
+   Títulos em letra condensada (Bebas Neue), textos em Barlow.
+   ========================================================= */
+:root {
+    --preto: #111111;
+    --grafite: #1e1e1e;
+    --branco: #ffffff;
+    --papel: #f4f1ea;       /* fundo das áreas de conteúdo */
+    --vermelho: #c8102e;    /* destaque da marca */
+    --vermelho-claro: #ff4d5e;
+    --verde: #0a8f4e;
+    --linha: #d8d3c8;
+    --titulo: "Bebas Neue", Impact, "Arial Narrow", sans-serif;
+    --texto: "Barlow", Arial, Helvetica, sans-serif;
+    --listras: repeating-linear-gradient(135deg,
+        var(--vermelho) 0 22px, var(--branco) 22px 44px,
+        var(--preto) 44px 66px, var(--branco) 66px 88px);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { font-family: var(--texto); font-size: 16px; background: var(--papel); color: var(--preto); }
+h1, h2, h3 { font-family: var(--titulo); font-weight: 400; letter-spacing: 1px; margin: 0; line-height: 1; }
+[hidden] { display: none !important; }
+body.oculto { visibility: hidden; }
+
+/* ---------- Marca (emblema redondo) ---------- */
+.emblema {
+    width: 64px; height: 64px; border-radius: 50%; flex-shrink: 0;
+    background: var(--vermelho); color: var(--branco);
+    border: 3px solid var(--branco); outline: 3px solid var(--vermelho);
+    display: grid; place-items: center;
+    font-family: var(--titulo); font-size: 30px; letter-spacing: 1px;
+}
+.marca { display: flex; align-items: center; gap: 14px; color: inherit; text-decoration: none; }
+.marca-nome { font-family: var(--titulo); font-size: 34px; letter-spacing: 3px; line-height: .9; }
+.marca-nome span { color: var(--vermelho-claro); }
+.marca-slogan { font-size: 13px; letter-spacing: 3px; text-transform: uppercase; opacity: .8; margin-top: 4px; }
+.aluno { font-size: 13px; letter-spacing: 1px; text-transform: uppercase; }
+.aluno strong { color: var(--vermelho-claro); }
+
+/* Faixa do poste de barbeiro */
+.poste { height: 14px; background: var(--listras); }
+.poste-vertical { width: 18px; background: var(--listras); flex-shrink: 0; }
+
+/* ---------- Botões ---------- */
+.btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    font-family: var(--titulo); font-size: 22px; letter-spacing: 2px;
+    padding: 12px 28px; border: 3px solid var(--vermelho);
+    background: var(--vermelho); color: var(--branco);
+    cursor: pointer; text-decoration: none; transition: background .15s, color .15s;
+}
+.btn:hover { background: var(--preto); border-color: var(--preto); }
+.btn:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--vermelho-claro); outline-offset: 2px; }
+.btn-contorno { background: transparent; color: var(--branco); border-color: var(--branco); }
+.btn-contorno:hover { background: var(--branco); color: var(--preto); border-color: var(--branco); }
+.btn-pequeno { font-size: 16px; padding: 6px 14px; }
+.btn-claro { background: var(--branco); color: var(--preto); border-color: var(--preto); }
+.btn-claro:hover { background: var(--preto); color: var(--branco); }
+
+/* ---------- Campos: estilo "linha" (só a borda de baixo) ---------- */
+.campo { display: flex; flex-direction: column; gap: 6px; }
+label { font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+input, textarea {
+    width: 100%; font: inherit; font-size: 17px; color: var(--preto);
+    background: transparent; border: 0; border-bottom: 3px solid var(--preto);
+    padding: 8px 2px; border-radius: 0; outline: none;
+}
+input:focus, textarea:focus { border-bottom-color: var(--vermelho); background: #fff; }
+textarea { resize: vertical; min-height: 90px; border: 3px solid var(--preto); padding: 10px; }
+textarea:focus { border-color: var(--vermelho); }
+input.invalido { border-bottom-color: var(--vermelho); background: #ffecee; }
+.dica { font-size: 13px; color: #6b665c; min-height: 16px; }
+
+/* ---------- Mensagens ---------- */
+.alerta { display: none; padding: 14px 16px; font-weight: 700; }
+.alerta.erro { display: block; background: var(--vermelho); color: var(--branco); }
+.alerta.erro::before { content: "✖  "; }
+.alerta.sucesso { display: block; background: var(--verde); color: var(--branco); }
+.alerta.sucesso::before { content: "✔  "; }
+.toast {
+    position: fixed; left: 50%; bottom: 24px; z-index: 50;
+    transform: translate(-50%, calc(100% + 40px)); visibility: hidden; transition: transform .25s, visibility .25s;
+    background: var(--preto); color: var(--branco); border-left: 10px solid var(--verde);
+    padding: 16px 24px; font-weight: 700; max-width: calc(100% - 32px);
+}
+.toast.mostrar { transform: translate(-50%, 0); visibility: visible; }
+
+/* =========================================================
+   TELA DIVIDIDA (login e cadastro)
+   esquerda: painel preto com a marca | direita: formulário
+   ========================================================= */
+.dividida { min-height: 100vh; display: grid; grid-template-columns: minmax(320px, 42%) 1fr; }
+.painel-marca {
+    background: var(--preto); color: var(--branco);
+    display: flex; position: relative; overflow: hidden;
+}
+.painel-marca .conteudo-marca {
+    flex: 1; padding: 48px 40px; display: flex; flex-direction: column; justify-content: space-between; gap: 32px;
+}
+.painel-marca h1 { font-size: clamp(56px, 8vw, 110px); line-height: .85; }
+.painel-marca h1 span { color: var(--vermelho-claro); display: block; }
+.painel-marca p { font-size: 18px; max-width: 34ch; color: #d6d6d6; margin: 16px 0 0; }
+.servicos { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding: 0; margin: 0; }
+.servicos li { border: 2px solid var(--branco); padding: 4px 12px; font-size: 13px; letter-spacing: 2px; text-transform: uppercase; }
+
+.painel-form { display: flex; align-items: center; justify-content: center; padding: 48px 24px; background: var(--papel); }
+.form-caixa { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 22px; }
+.form-caixa.largo { max-width: 620px; }
+.form-caixa h2 { font-size: 56px; }
+.form-caixa h2 small { display: block; font-family: var(--texto); font-size: 16px; letter-spacing: 0; color: #6b665c; margin-top: 8px; }
+.form-caixa form { display: flex; flex-direction: column; gap: 22px; }
+.form-caixa .btn { width: 100%; }
+.troca-conta { text-align: center; margin: 0; }
+.troca-conta a { color: var(--vermelho); font-weight: 700; }
+
+.grupo { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 22px; }
+.grupo legend {
+    font-family: var(--titulo); font-size: 26px; letter-spacing: 2px; padding: 0 0 10px; width: 100%;
+    border-bottom: 3px solid var(--vermelho); margin-bottom: 18px;
+}
+.duas { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.cep-numero { display: grid; grid-template-columns: 1fr 120px; gap: 20px; }
+
+/* =========================================================
+   TELA DE BOAS-VINDAS: imagem em tela cheia + texto centralizado
+   ========================================================= */
+.tela-hero {
+    min-height: 100vh; display: flex; flex-direction: column; color: var(--branco);
+    background: var(--preto) url("../img/hero.svg") center / cover no-repeat;
+}
+.topo-transparente {
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+    padding: 20px 32px; background: rgba(17, 17, 17, .85);
+}
+.topo-transparente nav { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+.topo-transparente nav a { color: var(--branco); text-decoration: none; font-family: var(--titulo); font-size: 22px; letter-spacing: 2px; }
+.topo-transparente nav a.ativo, .topo-transparente nav a:hover { color: var(--vermelho-claro); }
+.hero-centro { flex: 1; display: grid; place-items: center; padding: 32px 16px; }
+.selo {
+    text-align: center; background: var(--preto); padding: 40px 48px 36px;
+    border: 3px solid var(--branco); outline: 10px solid var(--preto); max-width: 720px;
+}
+.selo .pequeno { font-size: 14px; letter-spacing: 6px; text-transform: uppercase; color: #cfcfcf; }
+.selo h1 { font-size: clamp(48px, 7.5vw, 104px); line-height: .9; margin: 8px 0 14px; overflow-wrap: anywhere; }
+.selo h1 span { color: var(--vermelho-claro); }
+.selo p { font-size: 18px; margin: 0 0 24px; color: #e6e6e6; }
+.selo .divisor { width: 120px; height: 10px; background: var(--listras); margin: 0 auto 20px; }
+
+/* =========================================================
+   PAINEL DO ADMIN: menu lateral + cartões de clientes
+   ========================================================= */
+.painel-admin { min-height: 100vh; display: grid; grid-template-columns: 260px 1fr; }
+.lateral {
+    background: var(--preto); color: var(--branco); display: flex;
+    position: sticky; top: 0; height: 100vh;
+}
+.lateral .dentro { flex: 1; padding: 28px 22px; display: flex; flex-direction: column; gap: 28px; }
+.lateral .marca-nome { font-size: 30px; }
+.lateral nav { display: flex; flex-direction: column; gap: 4px; }
+.lateral nav a {
+    color: var(--branco); text-decoration: none; font-family: var(--titulo); font-size: 24px; letter-spacing: 2px;
+    padding: 8px 12px; border-left: 6px solid transparent;
+}
+.lateral nav a:hover { border-left-color: var(--branco); }
+.lateral nav a.ativo { border-left-color: var(--vermelho); background: var(--grafite); }
+.lateral .rodape { margin-top: auto; display: flex; flex-direction: column; gap: 14px; }
+
+.area { padding: 36px 40px; min-width: 0; }
+.cabecalho-area { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 28px; }
+.cabecalho-area h1 { font-size: 64px; }
+.cabecalho-area h1 span { color: var(--vermelho); }
+.contador { font-size: 14px; letter-spacing: 2px; text-transform: uppercase; color: #6b665c; }
+
+.busca { display: flex; gap: 10px; align-items: flex-end; }
+.busca input { width: 140px; }
+
+.duas-colunas { display: grid; grid-template-columns: 1fr minmax(300px, 400px); gap: 32px; align-items: start; }
+.cartoes { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; }
+.cartao-cliente {
+    background: var(--branco); border: 3px solid var(--preto);
+    display: flex; flex-direction: column;
+}
+.cartao-cliente .faixa { height: 8px; background: var(--listras); }
+.cartao-cliente .corpo { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; }
+.cartao-cliente .numero { font-family: var(--titulo); font-size: 20px; color: var(--vermelho); letter-spacing: 1px; }
+.cartao-cliente .nome { font-family: var(--titulo); font-size: 30px; letter-spacing: 1px; line-height: 1; overflow-wrap: anywhere; }
+.cartao-cliente .info { font-size: 14px; color: #4a463f; }
+.cartao-cliente .acoes { display: flex; border-top: 3px solid var(--preto); }
+.cartao-cliente .acoes button {
+    flex: 1; font-family: var(--titulo); font-size: 18px; letter-spacing: 2px; padding: 10px;
+    border: 0; cursor: pointer; background: var(--branco); color: var(--preto);
+}
+.cartao-cliente .acoes button + button { border-left: 3px solid var(--preto); }
+.cartao-cliente .acoes button:hover { background: var(--preto); color: var(--branco); }
+.cartao-cliente .acoes [data-ver] { background: var(--vermelho); color: var(--branco); }
+.cartao-cliente.selecionado { outline: 5px solid var(--vermelho); outline-offset: -1px; }
+.vazio { padding: 32px; text-align: center; border: 3px dashed var(--linha); color: #6b665c; grid-column: 1 / -1; }
+
+/* Ficha do cliente (lado direito) */
+.ficha { background: var(--preto); color: var(--branco); position: sticky; top: 24px; }
+.ficha .topo-ficha { padding: 20px 22px 14px; border-bottom: 3px solid var(--vermelho); }
+.ficha h2 { font-size: 36px; }
+.ficha .vazio { border-color: #444; color: #bdbdbd; margin: 22px; }
+.ficha dl { margin: 0; padding: 8px 22px 22px; }
+.ficha dt { font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--vermelho-claro); margin-top: 14px; }
+.ficha dd { margin: 2px 0 0; font-size: 17px; white-space: pre-wrap; word-break: break-word; }
+.detalhe { display: none; }
+.detalhe.visivel { display: block; }
+
+/* =========================================================
+   PARTE 4: telas de CRUD (formulário + tabela + modal)
+   ========================================================= */
+.crud { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 32px; align-items: start; }
+.form-crud { background: var(--branco); border: 3px solid var(--preto); position: sticky; top: 24px; }
+.form-crud .faixa { height: 8px; background: var(--listras); }
+.form-crud form { padding: 20px; display: flex; flex-direction: column; gap: 18px; }
+.form-crud h2 { font-size: 32px; }
+.form-crud h2 span { color: var(--vermelho); }
+.form-crud .botoes { display: flex; gap: 10px; }
+.form-crud .botoes .btn { flex: 1; font-size: 18px; padding: 10px 14px; }
+select {
+    width: 100%; font: inherit; font-size: 17px; color: var(--preto); background: transparent;
+    border: 0; border-bottom: 3px solid var(--preto); padding: 8px 2px; border-radius: 0; outline: none;
+}
+select:focus { border-bottom-color: var(--vermelho); background: #fff; }
+.form-crud.editando { outline: 5px solid var(--vermelho); outline-offset: -1px; }
+
+.barra-lista { display: flex; gap: 12px; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; margin-bottom: 14px; }
+.barra-lista .campo { flex: 1; min-width: 200px; max-width: 360px; }
+.tabela-caixa { background: var(--branco); border: 3px solid var(--preto); overflow-x: auto; }
+table.tabela { width: 100%; border-collapse: collapse; font-size: 15px; }
+.tabela th {
+    background: var(--preto); color: var(--branco); text-align: left; padding: 12px 14px;
+    font-family: var(--titulo); font-weight: 400; font-size: 18px; letter-spacing: 2px; white-space: nowrap;
+}
+.tabela td { padding: 12px 14px; border-bottom: 2px solid var(--linha); vertical-align: middle; }
+.tabela tr:last-child td { border-bottom: 0; }
+.tabela tbody tr:hover { background: #faf7f0; }
+.tabela .num { text-align: right; white-space: nowrap; }
+.tabela .col-acoes { white-space: nowrap; text-align: right; }
+.btn-tabela {
+    font-family: var(--titulo); font-size: 16px; letter-spacing: 2px; padding: 5px 12px; cursor: pointer;
+    border: 2px solid var(--preto); background: var(--branco); color: var(--preto);
+}
+.btn-tabela + .btn-tabela { margin-left: 6px; }
+.btn-tabela:hover { background: var(--preto); color: var(--branco); }
+.btn-tabela.perigo { border-color: var(--vermelho); color: var(--vermelho); }
+.btn-tabela.perigo:hover { background: var(--vermelho); color: var(--branco); }
+.tabela-vazia { padding: 32px; text-align: center; color: #6b665c; }
+
+.selo-status { display: inline-block; padding: 2px 10px; font-size: 12px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--branco); }
+.selo-status.PENDENTE { background: #b45309; }
+.selo-status.ACEITO { background: var(--verde); }
+.selo-status.RECUSADO { background: var(--vermelho); }
+
+dialog.modal { border: 3px solid var(--preto); padding: 0; max-width: 420px; width: calc(100% - 32px); }
+dialog.modal::backdrop { background: rgba(17, 17, 17, .7); }
+dialog.modal .faixa { height: 8px; background: var(--listras); }
+dialog.modal .corpo { padding: 24px; }
+dialog.modal h2 { font-size: 34px; margin-bottom: 10px; }
+dialog.modal p { margin: 0 0 20px; font-size: 17px; }
+dialog.modal .botoes { display: flex; gap: 10px; justify-content: flex-end; }
+dialog.modal .btn { font-size: 18px; padding: 8px 20px; }
+
+@media (max-width: 900px) {
+    .crud { grid-template-columns: 1fr; }
+    .form-crud { position: static; }
+}
+
+/* ---------- Celular ---------- */
+@media (max-width: 900px) {
+    .dividida, .painel-admin, .duas-colunas { grid-template-columns: 1fr; }
+    .painel-marca .conteudo-marca { padding: 28px 20px; }
+    .painel-marca h1 { font-size: 64px; }
+    .lateral { position: static; height: auto; }
+    .lateral .dentro { padding: 20px 16px; gap: 16px; }
+    .lateral nav { flex-direction: row; flex-wrap: wrap; }
+    .area { padding: 24px 16px; }
+    .cabecalho-area h1 { font-size: 48px; }
+    .ficha { position: static; }
+    .topo-transparente { padding: 16px; }
+    .selo { padding: 28px 20px; }
+}
+@media (max-width: 520px) {
+    .duas, .cep-numero { grid-template-columns: 1fr; }
+    .form-caixa h2 { font-size: 44px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.selo .btn { margin: 4px; }
+
+
+/* ============================================================
+   Serviços do CLIENTE: cartões para escolher + pedido de horário
+   ============================================================ */
+.cartoes-servico { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 18px; margin-bottom: 32px; }
+.cartao-servico {
+    background: var(--branco); border: 3px solid var(--preto); text-align: left; cursor: pointer;
+    font: inherit; color: inherit; padding: 0; display: flex; flex-direction: column;
+}
+.cartao-servico .faixa { height: 8px; background: var(--listras); }
+.cartao-servico .miolo { padding: 18px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.cartao-servico h3 { font-size: 30px; }
+.cartao-servico p { margin: 0; color: #6b665c; font-size: 14px; flex: 1; }
+.cartao-servico .linha-info { display: flex; justify-content: space-between; align-items: baseline; font-weight: 700; }
+.cartao-servico .preco { font-family: var(--titulo); font-size: 30px; color: var(--vermelho); letter-spacing: 1px; }
+.cartao-servico:hover { background: #faf7f0; }
+.cartao-servico:focus-visible { outline: 3px solid var(--vermelho-claro); outline-offset: 2px; }
+.cartao-servico.escolhido { outline: 5px solid var(--vermelho); outline-offset: -1px; }
+
+.pedido { background: var(--branco); border: 3px solid var(--preto); margin-bottom: 32px; }
+.pedido .faixa { height: 8px; background: var(--listras); }
+.pedido form { padding: 20px; display: flex; flex-direction: column; gap: 18px; max-width: 640px; }
+.pedido h2 { font-size: 32px; }
+.pedido h2 span { color: var(--vermelho); }
+.pedido .resumo { font-weight: 700; }
+.pedido .duas { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.titulo-secao { font-size: 34px; margin: 0 0 14px; }
+.titulo-secao span { color: var(--vermelho); }

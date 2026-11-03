@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- TELA 1: LOGIN (endereço: http://localhost:8080) -->
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Navalha Negra | Entrar</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow:wght@400;700&display=swap">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<div class="dividida">
+    <!-- Lado esquerdo: marca -->
+    <aside class="painel-marca">
+        <div class="conteudo-marca">
+            <div class="marca">
+                <div class="emblema">NN</div>
+                <div>
+                    <div class="marca-nome">NAVALHA <span>NEGRA</span></div>
+                    <div class="marca-slogan">Barbearia · desde 2026</div>
+                </div>
+            </div>
+            <div>
+                <h1>Corte.<span>Barba.</span>Respeito.</h1>
+                <p>Clientes e agendamentos da barbearia em um só lugar.</p>
+            </div>
+            <div>
+                <ul class="servicos">
+                    <li>Corte</li><li>Barba</li><li>Sobrancelha</li><li>Pigmentação</li>
+                </ul>
+                <p class="aluno">Aluno: <strong>Gustavo D. e Arthur M.</strong></p>
+            </div>
+        </div>
+        <div class="poste-vertical"></div>
+    </aside>
+
+    <!-- Lado direito: formulário -->
+    <main class="painel-form">
+        <div class="form-caixa">
+            <h2>Entrar<small>Use o email e a senha do seu cadastro.</small></h2>
+
+            <form id="formLogin" novalidate>
+                <div class="campo">
+                    <label for="email">Usuário (email)</label>
+                    <input type="email" id="email" placeholder="seuemail@gmail.com" autocomplete="username" required>
+                </div>
+                <div class="campo">
+                    <label for="senha">Senha</label>
+                    <input type="password" id="senha" placeholder="••••••••" autocomplete="current-password" required>
+                </div>
+                <button type="submit" class="btn">Entrar</button>
+            </form>
+
+            <div id="mensagem" class="alerta" role="alert"></div>
+
+            <p class="troca-conta">Ainda não é cliente? <a href="/cadastro.html">Faça seu cadastro</a></p>
+        </div>
+    </main>
+</div>
+
+<script>
+    const form = document.getElementById("formLogin");
+    const msg = document.getElementById("mensagem");
+    const campos = [document.getElementById("email"), document.getElementById("senha")];
+
+    function mostrarErro(texto) {
+        msg.textContent = texto;
+        msg.className = "alerta erro";
+        campos.forEach(c => c.classList.add("invalido"));
+    }
+
+    campos.forEach(c => c.addEventListener("input", () => {
+        c.classList.remove("invalido");
+        msg.className = "alerta";
+    }));
+
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault(); // impede a página de recarregar
+
+        const email = campos[0].value.trim();
+        const senha = campos[1].value;
+
+        // Validação na tela: campos vazios
+        if (!email || !senha) {
+            mostrarErro("Preencha usuário e senha.");
+            return;
+        }
+
+        try {
+            // Envia email e senha: quem compara com o hash BCrypt é o Java
+            const resposta = await fetch("/api/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, senha })
+            });
+
+            if (resposta.ok) {
+                window.location.href = "/home.html"; // LOGIN CERTO: abre a tela de boas-vindas
+            } else {
+                const dados = await resposta.json().catch(() => ({}));
+                mostrarErro(dados.mensagem || "Email ou senha inválidos");
+            }
+        } catch (erro) {
+            mostrarErro("Servidor indisponível. Tente novamente.");
+        }
+    });
+</script>
+</body>
+</html>
